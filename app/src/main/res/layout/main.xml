@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:gravity="top|center"
+	android:orientation="vertical">
+
+	<EditText
+		android:id="@+id/toCvt"
+		android:layout_width="wrap_content"
+		android:inputType="textMultiLine"
+		android:layout_height="wrap_content"
+		android:ems="10"/>
+
+	<TextView
+		android:id="@+id/viewresult"
+		android:text="Result loading..."
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"/>
+
+	<Button
+		android:id="@+id/show"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="show"/>
+
+	<Button
+		android:id="@+id/downloadButton"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Download"/>
+
+	<TextView
+		android:id="@+id/processLog"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Not convert yet"
+		android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+</LinearLayout>
+

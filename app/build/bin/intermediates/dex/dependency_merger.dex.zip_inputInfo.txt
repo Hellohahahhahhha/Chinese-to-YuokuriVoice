@@ -1,0 +1,5 @@
+/storage/emulated/0/ChineseTom/app/build/bin/intermediates/jardex/a0a728e6d91c9c30db109a282a07b09b/kotlin-stdlib-common-1.7.10.jar.dex.zip
+/storage/emulated/0/ChineseTom/app/build/bin/intermediates/jardex/3cbf764097baf2fb64afecc87953690a/annotation-jvm-1.7.0.jar.dex.zip
+/storage/emulated/0/ChineseTom/app/build/bin/intermediates/jardex/5d1f7bc3ce6f1b9bfe760340f4f82876/annotation-1.7.0.jar.dex.zip
+/storage/emulated/0/ChineseTom/app/build/bin/intermediates/jardex/9ac3f43ffbfe205a518a2cc328e6bcdd/annotations-13.0.jar.dex.zip
+/storage/emulated/0/ChineseTom/app/build/bin/intermediates/jardex/58e9759c96b3d058b282ca33aec0f9be/kotlin-stdlib-1.7.10.jar.dex.zip
