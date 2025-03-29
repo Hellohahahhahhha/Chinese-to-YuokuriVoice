@@ -42,7 +42,6 @@ public class MainActivity extends Activity {
 
     //private static final String BASE_DIR = Environment.getExternalStorageDirectory() + 
 	//"/MikuriVoice/AutoDownloadTest/";
-	// 使用公共下载目录（兼容性更好）
 	private static final String BASE_DIR = 
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) +
     "/MikuriVoice/AutoDownloadTest/";
@@ -77,7 +76,7 @@ public class MainActivity extends Activity {
 				public void onClick(View v) {
 					logText="";
 					String originalText = toConvert.getText().toString();
-					toConvertList=originalText.replaceAll("\\n","").split(";");
+					toConvertList=originalText.replaceAll("\\n","").replaceAll("；",";").split(";");
 					if(originalText.isEmpty()) {
 						showError("输入文本不能为空!");
 						return;
@@ -116,7 +115,7 @@ public class MainActivity extends Activity {
             } else if (result != null) {
                 resultTextView.setText(result);
                 // 转换成功后自动开始下载
-				String[] TextList=lastConvertedText.split(";");
+				String[] TextList=lastConvertedText.replaceAll("；",";").split(";");
 				String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
 				
 				for(int i=0;i<TextList.length;i++){

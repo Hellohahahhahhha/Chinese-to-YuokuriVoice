@@ -6,6 +6,10 @@
 	android:gravity="top|center"
 	android:orientation="vertical">
 
+	<TextView
+		android:text="多句话同时转换请用分号分开（全半角均可）\n请谅解初始版本下载路径无法修改：/Download/MikuriVoice/AutoDownloadTest/"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"/>
 	<EditText
 		android:id="@+id/toCvt"
 		android:layout_width="wrap_content"
@@ -15,7 +19,7 @@
 
 	<TextView
 		android:id="@+id/viewresult"
-		android:text="Result loading..."
+		android:text="Result View"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"/>
 
