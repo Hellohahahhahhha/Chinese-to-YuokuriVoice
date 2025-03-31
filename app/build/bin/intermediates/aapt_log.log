@@ -1,6 +1,5 @@
-增量编译: 80 ms
-跳过link
-aapt2 call link 8ms
+增量编译: 58 ms
+aapt2 call link 226ms
 aapt2 call optimize 0ms
-aapt2 生成R耗时: 11ms
-aapt2 总耗时: 0.133s
+aapt2 生成R耗时: 9ms
+aapt2 总耗时: 0.315s

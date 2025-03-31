@@ -139,7 +139,9 @@ public class MainActivity extends Activity {
 			String timeStamp=params[1];
 			//String[] TextList=encodedText.split(";");
 			//for(String name:TextList){
-            String fileUrl = "https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji=" + encodedText;
+			//www.yukumo.net/api/v2/aqtk10/koe.mp3?type=f1e&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=
+			//www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji=
+            String fileUrl = "https://www.yukumo.net/api/v2/aqtk10/koe.mp3?type=f1e&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=" + encodedText;
 
             // 使用应用专属目录
 			File directory = new File(BASE_DIR);
