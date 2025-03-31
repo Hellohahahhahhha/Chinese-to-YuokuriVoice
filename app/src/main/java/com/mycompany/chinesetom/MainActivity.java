@@ -182,16 +182,17 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String filePath) {
             if (exception != null) {
-                showError("下载失败: " + exception.getMessage());
+                logText+="下载失败: 字数过多，请注意断句，字数请勿超过50字" +"\n";
             } else if (filePath != null) {
                 //Toast.makeText(MainActivity.this, 
 				  //		   "语音文件已保存到: " + filePath, 
 				  //		   Toast.LENGTH_LONG).show();
 				logText+="语音文件已保存到: " + filePath + "\n";
-				showLog.setText(logText);
+				
             } else {
                 showError("下载失败: 未知错误");
             }
+			showLog.setText(logText);
         }
 		
     }
