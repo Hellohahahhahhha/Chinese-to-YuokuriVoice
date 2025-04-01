@@ -14,7 +14,7 @@ public final class R {
   public static final class id {
     public static final int downloadButton=0x7f020000;
     public static final int processLog=0x7f020001;
-    public static final int show=0x7f020002;
+    public static final int timbre=0x7f020002;
     public static final int toCvt=0x7f020003;
     public static final int viewresult=0x7f020004;
   }

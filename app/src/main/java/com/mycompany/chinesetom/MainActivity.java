@@ -30,6 +30,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.net.URLEncoder;
 import android.icu.util.*;
+import android.widget.*;
+import java.util.*;
 
 public class MainActivity extends Activity {
 
@@ -39,6 +41,9 @@ public class MainActivity extends Activity {
 	private String[] toConvertList;
 	private TextView showLog;
 	private String logText;
+	private Spinner voiceTimbre;
+	private List<String> timbres;
+	private String selectedTimbre;
 
     //private static final String BASE_DIR = Environment.getExternalStorageDirectory() + 
 	//"/MikuriVoice/AutoDownloadTest/";
@@ -56,6 +61,7 @@ public class MainActivity extends Activity {
         initializeViews();
         setupButtonClickListener();
         checkStoragePermission();
+		selectTimbre();
     }
 
     private void initializeViews() {
@@ -64,11 +70,44 @@ public class MainActivity extends Activity {
         downloadButton = findViewById(R.id.downloadButton);
 		showLog = findViewById(R.id.processLog);
 		logText="";
+		voiceTimbre = findViewById(R.id.timbre);
+		timbres=new ArrayList<String>();
+		timbres.add("f1e(chirno)");
+		timbres.add("f1(reimu,marisa,etc)");
+		
+		ArrayAdapter<String> adapter=new ArrayAdapter<>(
+		this,
+		android.R.layout.simple_spinner_item,
+		timbres
+		);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		voiceTimbre.setAdapter(adapter);
 
         // 移除或隐藏Show按钮
-        Button showButton = findViewById(R.id.show);
-        showButton.setVisibility(View.GONE);
+        //Button showButton = findViewById(R.id.show);
+        //showButton.setVisibility(View.GONE);
     }
+	
+	private void selectTimbre(){
+		
+
+		voiceTimbre.setOnItemSelectedListener(
+			new AdapterView.OnItemSelectedListener(){
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+					String selectedItem = parent.getItemAtPosition(position).toString();
+					selectedTimbre=selectedItem;
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {
+					// 未选择任何项时的处理
+					selectedTimbre="f1e";
+					//select default timbre: chirno
+				}
+			}
+		);
+	}
 
     private void setupButtonClickListener() {
         downloadButton.setOnClickListener(new View.OnClickListener() {
@@ -141,7 +180,7 @@ public class MainActivity extends Activity {
 			//for(String name:TextList){
 			//www.yukumo.net/api/v2/aqtk10/koe.mp3?type=f1e&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=
 			//www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji=
-            String fileUrl = "https://www.yukumo.net/api/v2/aqtk10/koe.mp3?type=f1e&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=" + encodedText;
+            String fileUrl = "https://www.yukumo.net/api/v2/aqtk10/koe.mp3?type="+selectedTimbre.replaceAll("\\(.*?\\)","")+"&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=" + encodedText;
 
             // 使用应用专属目录
 			File directory = new File(BASE_DIR);
@@ -154,7 +193,7 @@ public class MainActivity extends Activity {
 
             
 		
-            String fileName = params[2] + "(" + timeStamp + ")" + ".mp3";
+            String fileName = params[2] + selectedTimbre.replaceAll(".*?\\(","\\(") + "(" + timeStamp + ")" + ".mp3";
 			//resultTextView.setText(toConvertList[0]);
             File outputFile = new File(directory, fileName);
 

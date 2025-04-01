@@ -27,18 +27,25 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"/>
 
-	<Button
-		android:id="@+id/show"
+	<LinearLayout
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="show"/>
+		android:gravity="top|center"
+		android:orientation="horizontal">
 
 	<Button
 		android:id="@+id/downloadButton"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:text="Download"/>
-
+	<Spinner
+		android:id="@+id/timbre"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Switch Speaker"
+		android:orientation="horizontal">
+	</Spinner>
+	</LinearLayout>
 	<TextView
 		android:id="@+id/processLog"
 		android:layout_width="wrap_content"
