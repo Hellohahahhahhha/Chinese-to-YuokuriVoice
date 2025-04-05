@@ -3,55 +3,68 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
-<LinearLayout
-	
-	android:layout_width="match_parent"
-	android:layout_height="wrap_content"
-	android:gravity="top|center"
-	android:orientation="vertical">
-
-	<TextView
-		android:text="多句话同时转换请用分号分开（全半角均可）\n请谅解初始版本下载路径无法修改：/Download/MikuriVoice/AutoDownloadTest/"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"/>
-	<EditText
-		android:id="@+id/toCvt"
-		android:layout_width="wrap_content"
-		android:inputType="textMultiLine"
-		android:layout_height="wrap_content"
-		android:ems="10"/>
-
-	<TextView
-		android:id="@+id/viewresult"
-		android:text="Result View"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"/>
 
 	<LinearLayout
-		android:layout_width="wrap_content"
+		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:gravity="top|center"
-		android:orientation="horizontal">
+		android:orientation="vertical">
 
-	<Button
-		android:id="@+id/downloadButton"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Download"/>
-	<Spinner
-		android:id="@+id/timbre"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Switch Speaker"
-		android:orientation="horizontal">
-	</Spinner>
+		<TextView
+			android:text="多句话同时转换请用分号分开（全半角均可）\n默认下载路径：/Download/YoukuriVoice/"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"/>
+
+		<EditText
+			android:id="@+id/toCvt"
+			android:layout_width="wrap_content"
+			android:inputType="textMultiLine"
+			android:layout_height="wrap_content"
+			android:ems="10"/>
+
+		<TextView
+			android:id="@+id/viewresult"
+			android:text="Result View"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"/>
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:gravity="top|center"
+			android:orientation="horizontal">
+
+			<Button
+				android:id="@+id/downloadButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="Download"/>
+
+			<Spinner
+				android:id="@+id/timbre"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="Switch Speaker"
+				android:orientation="horizontal">
+
+			</Spinner>
+
+		</LinearLayout>
+
+		<Button
+			android:id="@+id/pathCosing"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Choose Download Path"/>
+
+		<TextView
+			android:id="@+id/processLog"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Not convert yet"
+			android:textAppearance="?android:attr/textAppearanceSmall"/>
+
 	</LinearLayout>
-	<TextView
-		android:id="@+id/processLog"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Not convert yet"
-		android:textAppearance="?android:attr/textAppearanceSmall"/>
 
-</LinearLayout>
 </ScrollView>
+

@@ -1,2 +1,4 @@
 # Referenced at /storage/emulated/0/ChineseTom/app/build/bin/injected/AndroidManifest.xml:37
 -keep class com.mycompany.chinesetom.MainActivity { <init>(); }
+# Referenced at /storage/emulated/0/ChineseTom/app/build/bin/injected/AndroidManifest.xml:53
+-keep class com.mycompany.chinesetom.TargetActivity { <init>(); }

@@ -12,6 +12,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.net.Uri;
+import android.content.Intent;
+import android.os.Bundle;
+import android.provider.DocumentsContract;
 
 import androidx.annotation.NonNull;
 
@@ -32,6 +36,8 @@ import java.net.URLEncoder;
 import android.icu.util.*;
 import android.widget.*;
 import java.util.*;
+import android.app.*;
+import android.content.*;
 
 public class MainActivity extends Activity {
 
@@ -44,12 +50,19 @@ public class MainActivity extends Activity {
 	private Spinner voiceTimbre;
 	private List<String> timbres;
 	private String selectedTimbre;
-
+	private static final int REQUEST_CODE_DIR_SELECT = 1002;
+	//private static final int REQUEST_CODE_FILE_SELECT = 1001;
+	//private Uri selectedFileUri;
+	private Button selectPath;
+	
+// 在类顶部添
+	private String customDownloadPath = null; // 用户自定义的下载路径
     //private static final String BASE_DIR = Environment.getExternalStorageDirectory() + 
 	//"/MikuriVoice/AutoDownloadTest/";
 	private static final String BASE_DIR = 
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) +
-    "/MikuriVoice/AutoDownloadTest/";
+    "/YoukuriVoice/";
+	//private String filePath;
     private static final int STORAGE_PERMISSION_CODE = 1;
     private String lastConvertedText = "";
 
@@ -62,18 +75,37 @@ public class MainActivity extends Activity {
         setupButtonClickListener();
         checkStoragePermission();
 		selectTimbre();
+		//chooseDownloadDirectory();
+		
+		
     }
+	
+	/*
+	private void chooseDownloadDirectory() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			// 使用系统的目录选择器（Android 5.0+）
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+			startActivityForResult(intent, REQUEST_CODE_DIR_SELECT);
+		} else {
+			// 旧版本Android可以使用文件选择器选择目录
+			Toast.makeText(this, "请手动输入存储路径", Toast.LENGTH_SHORT).show();
+		}
+		
+	}*/
 
     private void initializeViews() {
         resultTextView = findViewById(R.id.viewresult);
         toConvert = findViewById(R.id.toCvt);
         downloadButton = findViewById(R.id.downloadButton);
+		selectPath=findViewById(R.id.pathCosing);
 		showLog = findViewById(R.id.processLog);
 		logText="";
 		voiceTimbre = findViewById(R.id.timbre);
 		timbres=new ArrayList<String>();
 		timbres.add("f1e(chirno)");
 		timbres.add("f1(reimu,marisa,etc)");
+		
+		
 		
 		ArrayAdapter<String> adapter=new ArrayAdapter<>(
 		this,
@@ -87,6 +119,34 @@ public class MainActivity extends Activity {
         //Button showButton = findViewById(R.id.show);
         //showButton.setVisibility(View.GONE);
     }
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		
+		if (requestCode == REQUEST_CODE_DIR_SELECT && resultCode == RESULT_OK) {
+			if (data != null) {
+				Uri treeUri = data.getData();
+				// 获取永久访问权限（Android 5.0+需要）
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					getContentResolver().takePersistableUriPermission(
+						treeUri, 
+						Intent.FLAG_GRANT_READ_URI_PERMISSION | 
+						Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+					);
+				}
+
+				// 保存用户选择的目录
+				customDownloadPath="/storage/emulated/0/"+DocumentsContract.getTreeDocumentId(
+					Uri.parse(treeUri.toString())).toString().replace("primary:","");
+				logText+="set dir: "+customDownloadPath+"\n";
+				showLog.setText(logText);
+				
+				//Toast.makeText(this, "下载目录已设置", Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
 	
 	private void selectTimbre(){
 		
@@ -113,7 +173,7 @@ public class MainActivity extends Activity {
         downloadButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					logText="";
+					//logText="";
 					String originalText = toConvert.getText().toString();
 					toConvertList=originalText.replaceAll("\\n","").replaceAll("；",";").split(";");
 					if(originalText.isEmpty()) {
@@ -125,7 +185,30 @@ public class MainActivity extends Activity {
 					new TextConversionAndDownloadTask().execute(originalText);
 				}
 			});
+		selectPath.setOnClickListener(new View.OnClickListener(){
+			@Override
+			public void onClick(View v){
+				openDirectoryChooser();
+			}
+		});
     }
+	
+	private void openDirectoryChooser() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+							Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+							Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+			startActivityForResult(intent, REQUEST_CODE_DIR_SELECT);
+
+			// 临时保存原始文本
+			//this.toConvertList = originalText.replaceAll("\\n","").replaceAll("；",";").split(";");
+		} else {
+			Toast.makeText(this, "Android 5.0以下版本请使用默认目录", Toast.LENGTH_SHORT).show();
+		}
+	}
+	
+	
 
     private class TextConversionAndDownloadTask extends AsyncTask<String, Void, String> {
         private Exception exception;
@@ -165,6 +248,7 @@ public class MainActivity extends Activity {
             }
         }
     }
+	
 
     private class AudioDownloadTask extends AsyncTask<String, Void, String> {
         private Exception exception;
@@ -180,10 +264,27 @@ public class MainActivity extends Activity {
 			//for(String name:TextList){
 			//www.yukumo.net/api/v2/aqtk10/koe.mp3?type=f1e&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=
 			//www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji=
-            String fileUrl = "https://www.yukumo.net/api/v2/aqtk10/koe.mp3?type="+selectedTimbre.replaceAll("\\(.*?\\)","")+"&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=" + encodedText;
-
+			String fileUrl;
+            if(selectedTimbre=="f1(reimu,marisa,etc)"){
+				fileUrl="https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji="+encodedText;
+			}
+			else{
+				fileUrl = "https://www.yukumo.net/api/v2/aqtk10/koe.mp3?type="+selectedTimbre.replaceAll("\\(.*?\\)","")+"&speed=80&volume=100&pitch=100&accent=100&lmd=61&fsc=148&kanji=" + encodedText;
+			}
+			
+			
+			
             // 使用应用专属目录
-			File directory = new File(BASE_DIR);
+			
+			File directory;
+			if(customDownloadPath!=null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+				
+				directory = new File(customDownloadPath);
+				
+			}
+			else{
+				directory = new File(BASE_DIR);
+			}
             //File directory = new File(getExternalFilesDir(null), "AutoDownloadTest");
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
@@ -221,7 +322,9 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String filePath) {
             if (exception != null) {
-                logText+="下载失败: 字数过多，请注意断句，字数请勿超过50字" +"\n";
+                logText+="下载失败: 字数过多，请注意断句，字数请勿超过50字" 
+				+exception
+				+"\n";
             } else if (filePath != null) {
                 //Toast.makeText(MainActivity.this, 
 				  //		   "语音文件已保存到: " + filePath, 
