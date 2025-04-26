@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+     xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     android:layout_height="match_parent"
+     android:layout_width="match_parent">
+
+    <ScrollView
+         xmlns:android="http://schemas.android.com/apk/res/android"
+         android:layout_height="match_parent"
+         android:layout_width="match_parent">
+
+        <LinearLayout
+             android:layout_height="wrap_content"
+             android:layout_width="match_parent"
+             android:gravity="top|center"
+             android:orientation="vertical">
+
+            <TextView
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:text="多句话同时转换请用分号分开（全半角均可）\n默认下载路径：/Download/YoukuriVoice/" />
+
+            <EditText
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:inputType="textMultiLine"
+                 android:ems="10"
+                 android:id="@+id/toCvt" />
+
+            <TextView
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:id="@+id/viewresult"
+                 android:text="Result View" />
+
+            <LinearLayout
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:gravity="top|center"
+                 android:orientation="horizontal">
+
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/downloadButton"
+                     android:text="Download" />
+
+                <Spinner
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:orientation="horizontal"
+                     android:id="@+id/timbre"
+                     android:text="Switch Speaker">
+
+                </Spinner>
+
+            </LinearLayout>
+
+            <LinearLayout
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:gravity="top|center"
+                 android:orientation="horizontal">
+
+                <EditText
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:hint="Edit Name"
+                     android:id="@+id/deitNewPathName" />
+
+                <TextView
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/selectedPath" />
+
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/pathCosing"
+                     android:text="Choose new Path" />
+
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/enChoosePath"
+                     android:text="Add New Path" />
+                
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/deleteThisPath"
+                     android:text="Delete this Path"
+                    />
+
+            </LinearLayout>
+
+            <LinearLayout
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:gravity="top|center"
+                 android:orientation="horizontal">
+
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/submitRst"
+                     android:text="Ok" />
+
+                <Button
+                     android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:id="@+id/cancelIpt"
+                     android:text="Cancel" />
+
+            </LinearLayout>
+
+            <Spinner
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:id="@+id/pathChoices"
+                 android:text="default path">
+
+            </Spinner>
+
+            <TextView
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:textAppearance="?android:attr/textAppearanceSmall"
+                 android:id="@+id/processLog"
+                 android:text="Not convert yet" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
