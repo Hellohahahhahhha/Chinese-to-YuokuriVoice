@@ -298,9 +298,11 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void deleteCurrentPath(){
-
+<<<<<<< HEAD
+        UserPaths tmp=currentPath.copy();
+=======
         // UserPaths tmp=currentPath.copy();
-
+>>>>>>> ef7b870 (fixed permission errs)
         
         if(currentPath.getName().equals("default_path")){
             showError("Cannot delete default path");

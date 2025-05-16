@@ -4,32 +4,66 @@
       "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/java/com/example/chinesetoy/MainActivity.java",
       "selection": {
         "end": {
-          "column": 5,
-          "index": 9607,
-          "line": 311
+
+          "column": 34,
+          "index": 18387,
+          "line": 555
         },
         "start": {
-          "column": 5,
-          "index": 9607,
-          "line": 311
+          "column": 32,
+          "index": 18385,
+          "line": 555
+
         }
       }
     },
     {
-      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/res/layout/content_main.xml",
+      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/AndroidManifest.xml",
       "selection": {
         "end": {
-          "column": 16,
-          "index": 3383,
-          "line": 87
+
+          "column": 3,
+          "index": 199,
+          "line": 5
         },
         "start": {
-          "column": 16,
-          "index": 3383,
-          "line": 87
+          "column": 3,
+          "index": 199,
+          "line": 5
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/build.gradle.kts",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/build.gradle.kts",
+      "selection": {
+        "end": {
+          "column": 23,
+          "index": 264,
+          "line": 14
+        },
+        "start": {
+          "column": 23,
+          "index": 264,
+          "line": 14
+
         }
       }
     }
   ],
-  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/java/com/example/chinesetoy/MainActivity.java"
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/build.gradle.kts"
 }
