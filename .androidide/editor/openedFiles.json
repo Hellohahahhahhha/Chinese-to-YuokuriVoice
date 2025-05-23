@@ -4,66 +4,17 @@
       "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/java/com/example/chinesetoy/MainActivity.java",
       "selection": {
         "end": {
-
-          "column": 34,
-          "index": 18387,
-          "line": 555
+          "column": 47,
+          "index": 20942,
+          "line": 626
         },
         "start": {
-          "column": 32,
-          "index": 18385,
-          "line": 555
-
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/AndroidManifest.xml",
-      "selection": {
-        "end": {
-
-          "column": 3,
-          "index": 199,
-          "line": 5
-        },
-        "start": {
-          "column": 3,
-          "index": 199,
-          "line": 5
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/build.gradle.kts",
-      "selection": {
-        "end": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        },
-        "start": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/build.gradle.kts",
-      "selection": {
-        "end": {
-          "column": 23,
-          "index": 264,
-          "line": 14
-        },
-        "start": {
-          "column": 23,
-          "index": 264,
-          "line": 14
-
+          "column": 47,
+          "index": 20942,
+          "line": 626
         }
       }
     }
   ],
-  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/build.gradle.kts"
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/ChineseToY/app/src/main/java/com/example/chinesetoy/MainActivity.java"
 }

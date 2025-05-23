@@ -624,7 +624,7 @@ public class MainActivity extends AppCompatActivity {
         while ((line = reader.readLine()) != null) {
             response.append(line);
         }
-        String psdStr = response.substring(56250);
+        String psdStr = response.substring(55000);
         return psdStr;
     }
 
