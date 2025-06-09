@@ -35,6 +35,7 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.Type;
 
 import java.io.BufferedInputStream;
@@ -57,6 +58,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -67,6 +72,7 @@ import java.util.*;
 import android.app.*;
 import android.content.*;
 import kotlin.*;
+import kotlinx.coroutines.internal.Symbol;
 //import java.io.*;
 public class MainActivity extends AppCompatActivity {
 
@@ -80,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 	private List<String> timbres;
 	private String selectedTimbre;
 	private Spinner choosePerferencePath;
+    private Map<String,String> sgMap;
 	
     //new 
     private TextView selectedPathByUser;
@@ -149,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
 	
 	private void initializeViews() {
+        logCount=0;
         pathToOperate="";
         selectedPathByUser=findViewById(R.id.selectedPath);
         pathChooser = findViewById(R.id.pathCosing);
@@ -163,6 +171,17 @@ public class MainActivity extends AppCompatActivity {
 		showLog = findViewById(R.id.processLog);
         deleteThisPath=findViewById(R.id.deleteThisPath);
 		choosePerferencePath=findViewById(R.id.pathChoices);
+        
+        
+        //？！：×÷
+        sgMap=new LinkedHashMap<>();
+        sgMap.put("?","？");
+        sgMap.put("!","！");
+        sgMap.put(":","：");
+        sgMap.put("*","×");
+        sgMap.put("/","÷");
+        sgMap.put(";","；");
+        
 		logText="";
 		voiceTimbre = findViewById(R.id.timbre);
 		//binding.fab.setOnClickListener(v ->
@@ -212,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
             if(newPath.getPath().equals(up.getPath())){
                 return new UserPaths(up.getName(),"");
             }
-            showLogText("teted path "+up.getName()+": "+up.getPath()+"\n");
+            showLogText("teted path "+up.getName()+": "+up.getPath()+"\n",LOG);
         }
         return null;
     }
@@ -264,13 +283,53 @@ public class MainActivity extends AppCompatActivity {
 					Uri.parse(treeUri.toString())).toString().replace("primary:","");
                 String temp="..."+pathToOperate.substring(pathToOperate.length()-15);
                 selectedPathByUser.setText(temp);
-				logText+="chose dir: "+pathToOperate+"\n";
-				showLog.setText(logText);
+				showLogText("chose dir: "+pathToOperate,LOG);
 
 				//Toast.makeText(this, "下载目录已设置", Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
+    
+    private static String batchReplace(String originalString, Map<String, String> replaceMap) {
+        // 构建正则表达式，将Map中的键拼接成一个正则表达式
+        StringBuilder regexBuilder = new StringBuilder();
+        for (String key : replaceMap.keySet()) {
+            if (regexBuilder.length() > 0) {
+                regexBuilder.append("|");
+            }
+            // 对键进行转义，防止键中包含正则表达式的特殊字符
+            regexBuilder.append(Pattern.quote(key));
+        }
+        String regex = regexBuilder.toString();
+
+        // 创建Pattern和Matcher
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(originalString);
+
+        // 使用StringBuilder来构建最终的替换结果
+        StringBuilder result = new StringBuilder();
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            // 将上次匹配结束位置到本次匹配开始位置之间的内容添加到结果中
+            result.append(originalString, lastEnd, matcher.start());
+
+            // 获取匹配到的键，并从Map中获取对应的替换值
+            String match = matcher.group();
+            String replacement = replaceMap.get(match);
+
+            // 将替换值添加到结果中
+            result.append(replacement);
+
+            // 更新上次匹配结束位置
+            lastEnd = matcher.end();
+        }
+
+        // 将最后一次匹配结束位置到字符串末尾的内容添加到结果中
+        result.append(originalString.substring(lastEnd));
+
+        return result.toString();
+    }
 
 	private void selectTimbre(){
 
@@ -292,9 +351,30 @@ public class MainActivity extends AppCompatActivity {
 			}
 		);
 	}
-    private void showLogText(String msg){
-        logText+=msg;
+    private int logCount;
+    final private int ERROR=-1; 
+    final private int LOG=1;
+    final private int UNKNOWN_ERROR=0;
+    private void showLogText(String msg,int TYPE){
+        logCount++;
+        String logType;
+        switch(TYPE){
+            case ERROR:
+            logType=" -- ERROR --\n";
+            break;
+            case LOG:
+            logType=" -- LOG --\n";
+            break;
+            case UNKNOWN_ERROR:
+            logType=" -- UNKNOWN_ERROR --\n";
+            break;
+            default:
+            logType=" -- LOGH --\n";
+            break;
+        }
+        logText=logCount+logType+msg+'\n'+logText;
         showLog.setText(logText);
+        
     }
     
     private void deleteCurrentPath(){
@@ -306,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
             showError("Cannot delete default path");
             return;
         }
-        showLogText("deleting path:"+currentPath.getName()+"\n");
+        showLogText("deleting path:"+currentPath.getName()+"\n",LOG);
         new JSONFileManager().deleteUser(currentPath.getName());
         currentPath=pths.get(0);
         pathMap=toMap(pths);
@@ -359,7 +439,7 @@ public class MainActivity extends AppCompatActivity {
                         pthstr=selectedItem;
                     }
                     currentPath=new UserPaths(pthstr,customDownloadPath);
-                    showLogText("Selected path: "+customDownloadPath+"\n");
+                    showLogText("Selected path: "+customDownloadPath+"\n",LOG);
 				}
 
 				@Override
@@ -373,7 +453,7 @@ public class MainActivity extends AppCompatActivity {
         downloadButton.setOnClickListener(v->{
 					//logText="";
 					String originalText = toConvert.getText().toString();
-					toConvertList=originalText.replaceAll("\\n","").replaceAll("；",";").split(";");
+					toConvertList=batchReplace(originalText.replaceAll("\\n",""),sgMap).split("；");
 					if(originalText.isEmpty()) {
 						showError("输入文本不能为空!");
 						return;
@@ -408,7 +488,7 @@ public class MainActivity extends AppCompatActivity {
                         choosePerferencePath.setTooltipText(currentPath.getName());
                         hidePathEditor();
                         showOptions();
-                        showLogText("added path\n");
+                        showLogText("added path\n",LOG);
                         return;
                 }
                 if(checker.getPath()==""){
@@ -555,19 +635,22 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String filePath) {
             if (exception != null) {
-                logText+="下载失败: 字数过多，请注意断句，字数请勿超过50字" 
-					+exception
-					+"\n";
+                if(exception.toString().indexOf("Operation not permitted")!=-1){
+                    showLogText("请勿输入* / ? :等特殊符号",ERROR);
+                }
+                else if(exception.toString().indexOf("https://")!=-1){
+                    showLogText("下载失败: 字数过多，请注意断句，字数请勿超过50字",ERROR);
+                }
+                
             } else if (filePath != null) {
                 //Toast.makeText(MainActivity.this, 
 				//		   "语音文件已保存到: " + filePath, 
 				//		   Toast.LENGTH_LONG).show();
-				logText+="语音文件已保存到: " + filePath + "\n";
+				showLogText("语音文件已保存到: " + filePath,LOG);
 
             } else {
-                showError("下载失败: 未知错误"+exception.toString());
+                showLogText(exception.toString(),UNKNOWN_ERROR);
             }
-			showLog.setText(logText);
         }
 
     }
@@ -632,6 +715,7 @@ public class MainActivity extends AppCompatActivity {
         if (response == null || response.isEmpty()) {
             throw new RuntimeException("服务器返回空响应");
         }
+        //？！：×÷
 
         String content = response.substring(response.indexOf("&lt;begin&gt;")+13, response.indexOf("&lt;end&gt;"));
         content = content.replaceAll("\\s+", "")
@@ -746,7 +830,7 @@ private void showPermissionDeniedDialog() {
     
 
     private void showError(String message) {
-        Toast.makeText(MainActivity.this, "错误: " + message, Toast.LENGTH_LONG).show();
+        showLogText(message,ERROR);
         resultTextView.setText("操作失败");
     }
 	
@@ -846,7 +930,7 @@ private void showPermissionDeniedDialog() {
 			for(int i=0;i<users.size();i++){
 				if(users.get(i).getName().equals(name)){
 					users.remove(i);
-                    showLogText("path: "+name+" deleted\n");
+                    showLogText("path: "+name+" deleted\n",LOG);
 					break;
 				}
 			}
