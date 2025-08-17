@@ -87,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
 	private String selectedTimbre;
 	private Spinner choosePerferencePath;
     private Map<String,String> sgMap;
+    
+    //this contains origin English
+    private Map<Integer,String> insertText;
 	
     //new 
     private TextView selectedPathByUser;
@@ -108,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
 	//private static final int REQUEST_CODE_FILE_SELECT = 1001;
 	//private Uri selectedFileUri;
 	private Button selectPath;
+    
+    private Boolean isPermitted;
 
 // 在类顶部添
 	private String customDownloadPath = null; // 用户自定义的下载路径
@@ -130,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
 
+        isPermitted=false;
         checkStoragePermission();
         initializeViews();
         setupButtonClickListener();
@@ -195,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
         pathMap=toMap(pths);
         //as the first item of path.json is set to be "default_path"
         currentPath=pths.get(0);
+        
         
 		setupPathSpinner();
         
@@ -354,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
     private int logCount;
     final private int ERROR=-1; 
     final private int LOG=1;
+    final private int WARNING=101;
     final private int UNKNOWN_ERROR=0;
     private void showLogText(String msg,int TYPE){
         logCount++;
@@ -367,6 +375,9 @@ public class MainActivity extends AppCompatActivity {
             break;
             case UNKNOWN_ERROR:
             logType=" -- UNKNOWN_ERROR --\n";
+            break;
+            case WARNING:
+            logType="-- WARNING--\n";
             break;
             default:
             logType=" -- LOGH --\n";
@@ -458,6 +469,8 @@ public class MainActivity extends AppCompatActivity {
 						showError("输入文本不能为空!");
 						return;
 					}
+                
+                
 
 					// 先执行文本转换，然后在转换成功后自动下载
 					new TextConversionAndDownloadTask().execute(originalText);
@@ -529,7 +542,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
             try {
+                //add 
                 String originalText = "<begin>" + params[0] + "<end>";
+                
                 String encodedText = encodeText(originalText);
                 String response = performHttpRequest(encodedText);
                 String convertedText = processResponse(response);
@@ -610,22 +625,38 @@ public class MainActivity extends AppCompatActivity {
             String fileName = params[2] + selectedTimbre.replaceAll(".*?\\(","\\(") + "(" + timeStamp + ")" + ".mp3";
 			//resultTextView.setText(toConvertList[0]);
             File outputFile = new File(directory, fileName);
-
+            //************If permission got***********
             try {
-
-				BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
+                BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
 				FileOutputStream out = new FileOutputStream(outputFile);
                 byte[] buffer = new byte[1024];
                 int length;
                 while ((length = in.read(buffer)) > 0) {
                     out.write(buffer, 0, length);
                 }
-
                 return outputFile.getAbsolutePath();
 
-            } catch (IOException e) {
+            } //************if permission lost**************
+            catch (IOException e) {
+                //BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
+				    //BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
+                try{
+               BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
+                    File optFile = new File("/convertedAudio/", fileName);
+				    FileOutputStream outN = new FileOutputStream(optFile);
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = inN.read(buffer)) > 0) {
+                        outN.write(buffer, 0, length);
+                    }
+                    showLogText("Audio file saved to dir "+getPackageName()+" due to failed to get permission to access interal storage",WARNING);
                 exception = e;
-                return null;
+                    return outputFile.getAbsolutePath();
+                    }
+                catch(Exception e2){
+                    exception = e2;
+                    return null;
+                }
             }
 		}
 
@@ -636,7 +667,12 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String filePath) {
             if (exception != null) {
                 if(exception.toString().indexOf("Operation not permitted")!=-1){
-                    showLogText("请勿输入* / ? :等特殊符号",ERROR);
+                    if(isPermitted){
+                        showLogText("请勿输入* / ? :等特殊符号",ERROR);
+                    }
+                    else{
+                        checkStoragePermission();
+                    }
                 }
                 else if(exception.toString().indexOf("https://")!=-1){
                     showLogText("下载失败: 字数过多，请注意断句，字数请勿超过50字",ERROR);
@@ -717,7 +753,11 @@ public class MainActivity extends AppCompatActivity {
         }
         //？！：×÷
 
+        //read response
+        
         String content = response.substring(response.indexOf("&lt;begin&gt;")+13, response.indexOf("&lt;end&gt;"));
+        //remove spaces
+        
         content = content.replaceAll("\\s+", "")
 			.replaceAll("<spanstyle=color:#aaaaaa>.*?</span>", "");
         return content;
@@ -728,6 +768,8 @@ public class MainActivity extends AppCompatActivity {
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) 
             == PackageManager.PERMISSION_GRANTED) {
             // 已经有权限
+                isPermitted=true;
+                showLogText("PG",LOG);
             return;
         }
         
@@ -744,7 +786,10 @@ public class MainActivity extends AppCompatActivity {
                         STORAGE_PERMISSION_CODE
                     );
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton("Donot取消!!!", (dialog,which)->{requestPermissions(
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                STORAGE_PERMISSION_CODE
+            );})
                 .create()
                 .show();
         } else {
@@ -796,9 +841,12 @@ public void onRequestPermissionsResult(int requestCode,
         if (grantResults.length > 0 && 
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // 权限已授予
+                isPermitted=true;
+                showLogText("PG",LOG);
             Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
         } else {
             // 权限被拒绝
+                isPermitted=false;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                     // 用户勾选了"不再询问"，引导用户去设置中开启权限
@@ -813,6 +861,7 @@ public void onRequestPermissionsResult(int requestCode,
 }
 
 private void showPermissionDeniedDialog() {
+        isPermitted=false;
     new AlertDialog.Builder(this)
         .setTitle("权限被永久拒绝")
         .setMessage("您已拒绝存储权限并选择不再询问。如需使用完整功能，请在设置中手动授予权限")
@@ -826,6 +875,7 @@ private void showPermissionDeniedDialog() {
         .setNegativeButton("取消", null)
         .create()
         .show();
+        
 }
     
 
