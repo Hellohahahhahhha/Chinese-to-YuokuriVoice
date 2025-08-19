@@ -136,11 +136,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.content_main);
 
         isPermitted=false;
-        showLog = findViewById(R.id.processLog);
+        
         
         checkStoragePermission();
         
         initializeViews();
+        
+        setupInternalFolder();
         
         setupButtonClickListener();
         
@@ -150,6 +152,15 @@ public class MainActivity extends AppCompatActivity {
 		//chooseDownloadDirectory();
 
 
+    }
+    
+    private void setupInternalFolder(){
+        File tmp=new File(getExternalFilesDir(null).toString()+"/convertedAudio/");
+        if(!tmp.exists()){
+            if(!tmp.mkdir()){showLogText("Fuck it, failed to create folder 1",ERROR);}
+            showLogText(tmp.getAbsolutePath()+" has been created",LOG);
+        }
+        
     }
 
 	/*
@@ -179,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         toConvert = findViewById(R.id.toCvt);
         downloadButton = findViewById(R.id.downloadButton);
 		selectPath=findViewById(R.id.pathCosing);
-		
+		showLog = findViewById(R.id.processLog);
         deleteThisPath=findViewById(R.id.deleteThisPath);
 		choosePerferencePath=findViewById(R.id.pathChoices);
         
@@ -629,10 +640,52 @@ public class MainActivity extends AppCompatActivity {
 
             String fileName = params[2] + selectedTimbre.replaceAll(".*?\\(","\\(") + "(" + timeStamp + ")" + ".mp3";
 			//resultTextView.setText(toConvertList[0]);
-            File outputFile = new File(directory, fileName);
+            
+            //isPermitted=false;
+            
+            if(isPermitted){
+                File outputFile = new File(directory, fileName);
+                try{
+                    
+                    BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
+				    FileOutputStream out = new FileOutputStream(outputFile);
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, length);
+                    }
+                    return outputFile.getAbsolutePath();
+                }
+                catch(Exception e){
+                    exception=e;
+                    return null;
+                }
+            }else{
+                
+                File outputFile = new File(getExternalFilesDir(null).toString()+"/convertedAudio/",fileName);
+                
+                try{
+                    BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
+				    FileOutputStream out = new FileOutputStream(outputFile);
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, length);
+                        
+                    }
+                    showLogText("Audio file saved to dir "+outputFile.getAbsolutePath()+"/"+fileName+ " due to failed to get permission to access interal storage",WARNING);
+                    return outputFile.getAbsolutePath();
+                }catch(Exception e){
+                    exception=e;
+                    //showLogText("Fuckwit! filed",ERROR);
+                    return null;
+                }
+            }
+            /*
             //************If permission got***********
+            BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
             try {
-                BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
+                File outputFile = new File(directory, fileName);
 				FileOutputStream out = new FileOutputStream(outputFile);
                 byte[] buffer = new byte[1024];
                 int length;
@@ -662,7 +715,8 @@ public class MainActivity extends AppCompatActivity {
                     exception = e2;
                     return null;
                 }
-            }
+            
+            }*/
 		}
 
 		//}
@@ -776,7 +830,7 @@ public class MainActivity extends AppCompatActivity {
                 
                 isPermitted=true;
                 
-                showLogText("PG",LOG);
+                //showLogText("PG",LOG);
                 
             return;
         }
