@@ -136,11 +136,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.content_main);
 
         isPermitted=false;
+        showLog = findViewById(R.id.processLog);
+        
         checkStoragePermission();
+        
         initializeViews();
+        
         setupButtonClickListener();
         
 		selectTimbre();
+        
 		
 		//chooseDownloadDirectory();
 
@@ -174,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         toConvert = findViewById(R.id.toCvt);
         downloadButton = findViewById(R.id.downloadButton);
 		selectPath=findViewById(R.id.pathCosing);
-		showLog = findViewById(R.id.processLog);
+		
         deleteThisPath=findViewById(R.id.deleteThisPath);
 		choosePerferencePath=findViewById(R.id.pathChoices);
         
@@ -768,8 +773,11 @@ public class MainActivity extends AppCompatActivity {
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) 
             == PackageManager.PERMISSION_GRANTED) {
             // 已经有权限
+                
                 isPermitted=true;
+                
                 showLogText("PG",LOG);
+                
             return;
         }
         
@@ -842,7 +850,9 @@ public void onRequestPermissionsResult(int requestCode,
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // 权限已授予
                 isPermitted=true;
-                showLogText("PG",LOG);
+                
+                //showLogText("wtf?",LOG);
+                
             Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
         } else {
             // 权限被拒绝
