@@ -802,7 +802,9 @@ public class MainActivity extends AppCompatActivity {
         while ((line = reader.readLine()) != null) {
             response.append(line);
         }
-        String psdStr = response.substring(55000);
+        
+        String psdStr = response.substring(52000);
+        //showLogText(psdStr,LOG);
         return psdStr;
     }
 
