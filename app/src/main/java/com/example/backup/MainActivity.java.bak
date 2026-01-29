@@ -759,13 +759,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    
     private String performHttpRequest(String encodedText) throws IOException {
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 
-        try {//                https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php
-            URL url = new URL("https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php");
+        try {
+            URL url = new URL("https://ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php");
             String postData = "contents=" + encodedText + "&firstinput=OK&option=1&optionext=zenkaku";
 
             connection = (HttpURLConnection) url.openConnection();
@@ -783,32 +782,20 @@ public class MainActivity extends AppCompatActivity {
             if (connection != null) connection.disconnect();
         }
     }
-    
 
-    
     private void setupConnection(HttpURLConnection connection, String postData) throws IOException {
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Java)");
-    //connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 11; V2156A Build/RP1A.200720.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36");
         connection.setRequestProperty("Accept", "text/html");
-        
-        //very IMPORT!!!!!!
-        connection.setRequestProperty("X-Requested-With","mark.via");
-        
-        
-        
-        
-        connection.setRequestProperty("Referer","https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php");
         
         connection.setInstanceFollowRedirects(true);
         try (OutputStream os = connection.getOutputStream()) {
             os.write(postData.getBytes(StandardCharsets.UTF_8));
-            os.flush();
         }
     }
-    
+
     private String readResponse(BufferedReader reader) throws IOException {
         StringBuilder response = new StringBuilder();
         String line;
@@ -818,7 +805,7 @@ public class MainActivity extends AppCompatActivity {
         }
         
         String psdStr = response.substring(response.toString().length()-8586);
-        //showLogText(psdStr,LOG);
+        showLogText(psdStr,LOG);
         return psdStr;
     }
 
