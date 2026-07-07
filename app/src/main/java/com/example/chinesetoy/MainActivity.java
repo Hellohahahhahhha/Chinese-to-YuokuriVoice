@@ -624,7 +624,8 @@ public class MainActivity extends AppCompatActivity {
 
                 outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
                 //outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
-                String convertedPinyin = PinyinHelper.toHanyuPinyinString(params[0],outputFormat," ");
+                String convertedPinyin = PinyinHelper.toHanyuPinyinString(params[0].replaceAll("(?<=[\\u4e00-\\u9fa5])(?=[a-zA-Z])", " ")
+                        .replaceAll("(?<=[a-zA-Z])(?=[\\u4e00-\\u9fa5])", " "),outputFormat," ");
 
                 //"？","！","：","×","÷","；".replace("e^","ei")
                 String[] pinyinArray = convertedPinyin.split(" ");
