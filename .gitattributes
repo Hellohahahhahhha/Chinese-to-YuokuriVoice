@@ -1,0 +1,8 @@
+# 自动检测文本文件，规范化换行符
+* text=auto
+
+# 明确指定 JSON 文件保持 LF
+*.json text eol=lf
+
+# 或者明确指定 JSON 文件保持 CRLF
+*.json text eol=crlf

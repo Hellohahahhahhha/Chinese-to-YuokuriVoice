@@ -1,41 +1,47 @@
 package com.example.chinesetoy;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.github.stuxuhai.jpinyin.PinyinFormat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
+//import com.github.stuxuhai.jpinyin.PinyinFormat;
+//import com.github.stuxuhai.jpinyin.PinyinHelper;
+
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.*;
+//
+//import com.github.promeg.pinyinhelper.Pinyin;
+//import com.github.promeg.pinyinhelper.PinyinMapDict;
+
 import android.Manifest;
-import android.app.Activity;
-import android.app.Service;
-import android.view.LayoutInflater;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
 //import android.os.Binder;
-import android.os.Bundle;
 import android.view.View;
-import android.view.Gravity;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.net.Uri;
 import android.content.Intent;
-import android.graphics.PixelFormat;
 import android.provider.Settings;
 
 
 import android.provider.DocumentsContract;
-import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 
 import java.io.BufferedInputStream;
@@ -46,7 +52,6 @@ import java.io.FileReader;
 import java.io.Writer;
 import java.io.FileWriter;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -62,17 +67,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+
 
 import java.net.URLEncoder;
-import android.icu.util.*;
+
 import android.widget.*;
 import java.util.*;
 import android.app.*;
-import android.content.*;
-import kotlin.*;
-import kotlinx.coroutines.internal.Symbol;
+
 //import java.io.*;
 public class MainActivity extends AppCompatActivity {
 
@@ -83,13 +86,13 @@ public class MainActivity extends AppCompatActivity {
 	private TextView showLog;
 	private String logText;
 	private Spinner voiceTimbre;
-	private List<String> timbres;
+	private List<String> timbres=new ArrayList<>();
 	private String selectedTimbre;
-	private Spinner choosePerferencePath;
+	private Spinner choosePreferencePath;
     private Map<String,String> sgMap;
     
     //this contains origin English
-    private Map<Integer,String> insertText;
+    private Map<Integer,String> insertText=new HashMap<>();
 	
     //new 
     private TextView selectedPathByUser;
@@ -104,9 +107,9 @@ public class MainActivity extends AppCompatActivity {
     //private Button editPathName;
     //private Button cancelEditPth;
     private EditText pathNamer;
-	private List<UserPaths> pths;
+	private List<UserPaths> pths=new ArrayList<>();
     private UserPaths currentPath;
-    private Map<String,String> pathMap;
+    private Map<String,String> pathMap=new HashMap<>();
 	private static final int REQUEST_CODE_DIR_SELECT = 1002;
 	//private static final int REQUEST_CODE_FILE_SELECT = 1001;
 	//private Uri selectedFileUri;
@@ -124,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
 	//private String filePath;
     private static final int STORAGE_PERMISSION_CODE = 1;
     private String lastConvertedText = "";
+
+    private PinyinToKanaMapper mapper = new PinyinToKanaMapper();
 /*
     @Override
     protected void onDestroy() {
@@ -136,8 +141,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.content_main);
 
         isPermitted=false;
-        
-        
+
+        try {
+            mapper.loadMappingFromAssets(this,"mapping.tsv");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         checkStoragePermission();
         
         initializeViews();
@@ -150,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         
 		
 		//chooseDownloadDirectory();
+        showLogText(BASE_DIR,LOG);
 
 
     }
@@ -192,17 +203,24 @@ public class MainActivity extends AppCompatActivity {
 		selectPath=findViewById(R.id.pathCosing);
 		showLog = findViewById(R.id.processLog);
         deleteThisPath=findViewById(R.id.deleteThisPath);
-		choosePerferencePath=findViewById(R.id.pathChoices);
+		choosePreferencePath =findViewById(R.id.pathChoices);
         
         
         //？！：×÷
         sgMap=new LinkedHashMap<>();
-        sgMap.put("?","？");
-        sgMap.put("!","！");
-        sgMap.put(":","：");
-        sgMap.put("*","×");
-        sgMap.put("/","÷");
-        sgMap.put(";","；");
+        sgMap.put("?","？ ");
+        sgMap.put("!","！ ");
+        sgMap.put(":","： ");
+        sgMap.put("*","× ");
+        sgMap.put("/","÷ ");
+        sgMap.put(";","； ");
+        sgMap.put("？","？ ");
+        sgMap.put("！","！ ");
+        sgMap.put("：","： ");
+        sgMap.put("×","× ");
+        sgMap.put("÷","÷ ");
+        sgMap.put("；","； ");
+        sgMap.put("，","， ");
         
 		logText="";
 		voiceTimbre = findViewById(R.id.timbre);
@@ -249,10 +267,10 @@ public class MainActivity extends AppCompatActivity {
     private UserPaths checkPathExistence(UserPaths newPath){
         for(UserPaths up:pths){
             if(newPath.getName().equals(up.getName())){
-                return new UserPaths("",up.getPath());
+                return new UserPaths("", up.getPath());
             }
             if(newPath.getPath().equals(up.getPath())){
-                return new UserPaths(up.getName(),"");
+                return new UserPaths(up.getName(), "");
             }
             showLogText("teted path "+up.getName()+": "+up.getPath()+"\n",LOG);
         }
@@ -445,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
             // 显示对话框
             builder.show();
         });
-        choosePerferencePath.setOnItemSelectedListener(
+        choosePreferencePath.setOnItemSelectedListener(
 			new AdapterView.OnItemSelectedListener(){
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -465,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
                         customDownloadPath=pathMap.get(selectedItem);
                         pthstr=selectedItem;
                     }
-                    currentPath=new UserPaths(pthstr,customDownloadPath);
+                    currentPath= new UserPaths(pthstr, customDownloadPath);
                     showLogText("Selected path: "+customDownloadPath+"\n",LOG);
 				}
 
@@ -479,15 +497,12 @@ public class MainActivity extends AppCompatActivity {
 		);
         downloadButton.setOnClickListener(v->{
 					//logText="";
-					String originalText = toConvert.getText().toString();
-					toConvertList=batchReplace(originalText.replaceAll("\\n",""),sgMap).split("；");
+					String originalText = batchReplace(toConvert.getText().toString(),sgMap);
+					toConvertList=originalText.split("；");
 					if(originalText.isEmpty()) {
 						showError("输入文本不能为空!");
 						return;
 					}
-                
-                
-
 					// 先执行文本转换，然后在转换成功后自动下载
 					new TextConversionAndDownloadTask().execute(originalText);
 		    });
@@ -505,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 
-                UserPaths newPath=new UserPaths(pathNamer.getText().toString(),pathToOperate);
+                UserPaths newPath= new UserPaths(pathNamer.getText().toString(), pathToOperate);
                 
                 UserPaths checker=checkPathExistence(newPath);
                 try{
@@ -514,7 +529,10 @@ public class MainActivity extends AppCompatActivity {
                         currentPath=newPath;
                         pathMap=toMap(pths);
                         setupPathSpinner();
-                        choosePerferencePath.setTooltipText(currentPath.getName());
+                        //??????????
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            choosePreferencePath.setTooltipText(currentPath.getName());
+                        }
                         hidePathEditor();
                         showOptions();
                         showLogText("added path\n",LOG);
@@ -552,27 +570,100 @@ public class MainActivity extends AppCompatActivity {
 
 
 	//Text Conversion
+    private class PinyinToKanaMapper {
+        private Map<String, String> pinyinToKana = new HashMap<>();
+
+        public void loadMapping(String filePath) throws IOException {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(filePath), "UTF-8"))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split("\t");
+                    if (parts.length == 2) {
+                        pinyinToKana.put(parts[0].trim(), parts[1].trim());
+                    }
+                }
+            }
+        }
+        public void loadMappingFromAssets(Context context, String fileName) throws IOException {
+            // 通过 AssetManager 打开文件
+            try (InputStream is = context.getAssets().open(fileName);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split("\t");
+                    if (parts.length == 2) {
+                        pinyinToKana.put(parts[0].trim(), parts[1].trim());
+                    }
+                }
+            }
+        }
+
+        public String getKana(String pinyin) {
+            return pinyinToKana.get(pinyin);
+        }
+
+        public boolean containsKey(String pinyin) {
+            return pinyinToKana.containsKey(pinyin);
+        }
+    }
+
     private class TextConversionAndDownloadTask extends AsyncTask<String, Void, String> {
         private Exception exception;
 
         @Override
         protected String doInBackground(String... params) {
             try {
-                //add 
-                String originalText = "<begin>" + params[0] + "<end>";
+                //add
+                //String convertedPinyin = PinyinHelper.convertToPinyinString(params[0]," ",PinyinFormat.WITHOUT_TONE);
+
+                HanyuPinyinOutputFormat outputFormat = new HanyuPinyinOutputFormat();
+
+                //set up mapper
+
+                outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+                //outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
+                String convertedPinyin = PinyinHelper.toHanyuPinyinString(params[0],outputFormat," ");
+
+                //"？","！","：","×","÷","；".replace("e^","ei")
+                String[] pinyinArray = convertedPinyin.split(" ");
+                StringBuilder kanaResult = new StringBuilder();
+
+                for(String pinyin : pinyinArray){
+                    if (pinyin.matches("[\\u4e00-\\u9fa5]")) {
+                        kanaResult.append(pinyin);
+                        continue;
+                    }
+
+                    String kana = mapper.getKana(pinyin);
+                    if (kana != null) {
+                        kanaResult.append(kana);
+                    } else {
+                        // 如果映射表中找不到，保留原拼音（或记录日志）
+                        System.err.println("未找到映射: " + pinyin);
+                        //showLogText();
+                        kanaResult.append(pinyin);
+                    }
+                }
+
+
+
+                //String originalText = "<begin>" + params[0] + "<end>";
                 
-                String encodedText = encodeText(originalText);
-                String response = performHttpRequest(encodedText);
-                String convertedText = processResponse(response);
+                //String encodedText = encodeText(originalText);
+                //String response = performHttpRequest(encodedText);
+                //String convertedText = processResponse(response);
 
                 // 保存转换后的文本用于下载
-                lastConvertedText = convertedText;
-                return convertedText;
+                lastConvertedText = kanaResult.toString();
+                return lastConvertedText;
             } catch (Exception e) {
                 exception = e;
                 return null;
             }
         }
+
 
         @Override
         protected void onPostExecute(String result) {
@@ -586,6 +677,7 @@ public class MainActivity extends AppCompatActivity {
 
 				for(int i=0;i<TextList.length;i++){
 					new AudioDownloadTask().execute(TextList[i],timeStamp,toConvertList[i]);
+
 				}
             } else {
                 showError("未知错误"+exception.toString());
@@ -964,7 +1056,7 @@ private void showPermissionDeniedDialog() {
         resultTextView.setText("操作失败");
     }
 	
-	private class UserPaths{
+	private static class UserPaths{
 		private String name;
 		private String path;
 		
@@ -998,26 +1090,36 @@ private void showPermissionDeniedDialog() {
 			}
 		}
         public UserPaths copy(){
-            return new UserPaths(this.name,this.path);
+            return new UserPaths(this.name, this.path);
         }
 	}
 	
 	private void setupPathSpinner(){
 		//pths = new ProcessData().getPathList();
 		ArrayList<String> nmeList=new ArrayList<>();
-		List<UserPaths> defaultPaths=new ArrayList<>();
-		defaultPaths.add(new UserPaths("default_path",BASE_DIR));
+		//List<UserPaths> defaultPaths=new ArrayList<>();
+        UserPaths tmpPath= new UserPaths("default_path", BASE_DIR);
+		//defaultPaths.add(tmpPath);
 		//has set 'pths' just now
-		for(UserPaths up:pths){
-			nmeList.add(up.getName());
-		}
+
+        if(pths !=null && !pths.isEmpty()){
+            for(UserPaths up:pths){
+                if(up!=null && up.getName()!=null){
+                    nmeList.add(up.getName());
+                }
+
+            }
+        }else{
+            nmeList.add(tmpPath.getName());
+        }
+
 		ArrayAdapter<String> adapter=new ArrayAdapter<>(
 			this,
 			android.R.layout.simple_spinner_item,
 			nmeList
 		);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		choosePerferencePath.setAdapter(adapter);
+		choosePreferencePath.setAdapter(adapter);
 	}
 	
 	
@@ -1035,13 +1137,26 @@ private void showPermissionDeniedDialog() {
                 try{
                     testFile.createNewFile();
                     List<UserPaths> defaultPaths=new ArrayList<>();
-                    defaultPaths.add(new UserPaths("default_path",BASE_DIR));
-                    defaultPaths.add(new UserPaths("original_default_path",BASE_DIR));
+                    defaultPaths.add(new UserPaths("default_path", BASE_DIR));
+                    defaultPaths.add(new UserPaths("original_default_path", BASE_DIR));
                     String  json=gson.toJson(defaultPaths);
                     saveUsers(defaultPaths);
                 }catch(Exception e){
                     showError(e.toString());
                 }
+            }else{
+                List<UserPaths> userPaths=loadUsers();
+
+                while(userPaths.remove(null)){}
+
+                //check if-is valid
+                for(UserPaths up:userPaths) {
+                    //remove all Invalid items or wrong paths
+                    if (up != null && up.isInvalid()) {
+                        userPaths.remove(up);
+                    }
+                }
+                saveUsers(userPaths);
             }
 		}
 
@@ -1103,8 +1218,18 @@ private void showPermissionDeniedDialog() {
 		// 加载用户列表
 		private List<UserPaths> loadUsers() {
 			try(Reader reader = new FileReader(getExternalFilesDir(null).toString()+FILE_PATH)){
-				Type userListType = new TypeToken<List<UserPaths>>() {}.getType();
-				return gson.fromJson(reader, userListType);
+                JsonArray jsonArray= JsonParser.parseReader(reader).getAsJsonArray();
+                List<UserPaths> userPaths = new ArrayList<>();
+                for(int i = 0; i < jsonArray.size(); i++){
+                    UserPaths item = gson.fromJson(jsonArray.get(i),UserPaths.class);
+                    if(item!=null){
+                        userPaths.add(item);
+                    }
+                }
+                return userPaths;
+
+				//Type userListType = new TypeToken<List<UserPaths>>() {}.getType();
+				//return gson.fromJson(reader, userListType);
 			} catch (IOException e) {
 				e.printStackTrace();
                 showError(e.toString());
@@ -1116,6 +1241,7 @@ private void showPermissionDeniedDialog() {
 		private void saveUsers(List<UserPaths> users) {
 			try(Writer writer = new FileWriter(getExternalFilesDir(null).toString()+FILE_PATH)){
 				String jsonText=gson.toJson(users);
+
                 writer.write(jsonText);
 				//writer.close();
 			} catch (IOException e) {
