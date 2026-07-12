@@ -1,8 +1,11 @@
 package com.example.chinesetoy;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.stuxuhai.jpinyin.PinyinFormat;
@@ -78,6 +81,8 @@ import android.app.*;
 
 //import java.io.*;
 public class MainActivity extends AppCompatActivity {
+    private static final int STORAGE_PERMISSION_CODE = 100;  // 权限请求
+    private static final int REQUEST_CODE_SAF = 101;         // SAF 文件夹选择
 
     private TextView resultTextView;
     private EditText toConvert;
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) +
     "/YoukuriVoice/";
 	//private String filePath;
-    private static final int STORAGE_PERMISSION_CODE = 1;
+    //private static final int STORAGE_PERMISSION_CODE = 1;
     private String lastConvertedText = "";
 
     private PinyinToKanaMapper mapper = new PinyinToKanaMapper();
@@ -140,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
 
-        isPermitted=false;
+        //isPermitted=false;
 
         try {
             mapper.loadMappingFromAssets(this,"mapping.tsv");
@@ -148,11 +153,13 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }
 
-        checkStoragePermission();
+
+
+        checkAndRequestManageStoragePermission(this);
         
         initializeViews();
         
-        setupInternalFolder();
+        //setupInternalFolder();
         
         setupButtonClickListener();
         
@@ -160,19 +167,18 @@ public class MainActivity extends AppCompatActivity {
         
 		
 		//chooseDownloadDirectory();
-        showLogText(BASE_DIR,LOG);
+        //showLogText(BASE_DIR,LOG);
 
 
     }
     
-    private void setupInternalFolder(){
-        File tmp=new File(getExternalFilesDir(null).toString()+"/convertedAudio/");
-        if(!tmp.exists()){
-            if(!tmp.mkdir()){showLogText("Fuck it, failed to create folder 1",ERROR);}
-            showLogText(tmp.getAbsolutePath()+" has been created",LOG);
-        }
-        
-    }
+//    private void setupInternalFolder(){
+//        File tmp=new File(getExternalFilesDir(null).toString()+"/convertedAudio/");
+//        if(tmp.exists()){
+//            showLogText(tmp.getAbsolutePath()+" detected.",LOG);
+//        }
+//
+//    }
 
 	/*
 	 private void chooseDownloadDirectory() {
@@ -428,38 +434,33 @@ public class MainActivity extends AppCompatActivity {
 
         
         if(currentPath.getName().equals("default_path")){
-            showError("Cannot delete default path");
+            showError("请勿删除默认路径");
             return;
         }
-        showLogText("deleting path:"+currentPath.getName()+"\n",LOG);
+        showLogText("正在删除 "+currentPath.getName()+"\n",LOG);
         new JSONFileManager().deleteUser(currentPath.getName());
-        currentPath=pths.get(0);
+        currentPath=pths.get(0);//选默认路径
         pathMap=toMap(pths);
         setupPathSpinner();
-        //showLogText("path: "+tmp.getName()+"---"+tmp.getPath()+" deleted\n");
     }
 
     private void setupButtonClickListener() {
         deleteThisPath.setOnClickListener(v->{
             // 创建 AlertDialog.Builder 对象
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
             // 设置对话框标题和消息
-            builder.setTitle("Think twice");
-            builder.setMessage("You are deleting current path");
-
+            builder.setTitle("删除当前目录");
+            builder.setMessage("你将删除当前目录");
             // 设置“是”按钮
-            builder.setPositiveButton("Delete", (dialog, which) -> {
+            builder.setPositiveButton("删除", (dialog, which) -> {
                 // 用户点击“是”按钮时的逻辑
                 deleteCurrentPath();
             });
-
             // 设置“否”按钮
-            builder.setNegativeButton("Cancel", (dialog, which) -> {
+            builder.setNegativeButton("不删除", (dialog, which) -> {
                 // 用户点击“否”按钮时的逻辑
                 dialog.dismiss(); // 关闭对话框
             });
-
             // 显示对话框
             builder.show();
         });
@@ -469,8 +470,8 @@ public class MainActivity extends AppCompatActivity {
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 					String selectedItem = parent.getItemAtPosition(position).toString();
                     String pthstr;
-                    if(selectedItem.equals("")){
-                        if(customDownloadPath.equals("")){
+                    if(selectedItem.isEmpty()){
+                        if(customDownloadPath.isEmpty()){
                             //when opening the app
                             customDownloadPath=pths.get(0).getPath();
                             pthstr="default_path";
@@ -515,8 +516,8 @@ public class MainActivity extends AppCompatActivity {
             showOptions();
         });
         submitRst.setOnClickListener(v->{
-                if(pathNamer.getText().toString()=="" || pathToOperate==""){
-                    Toast.makeText(MainActivity.this,"invalid input",Toast.LENGTH_LONG).show();
+                if(pathNamer.getText().toString().isEmpty() || pathToOperate.isEmpty()){
+                    Toast.makeText(MainActivity.this,"请输入路径名称",Toast.LENGTH_LONG).show();
                     return;
                 }
                 
@@ -538,11 +539,11 @@ public class MainActivity extends AppCompatActivity {
                         showLogText("added path\n",LOG);
                         return;
                 }
-                if(checker.getPath()==""){
+                if(checker.getPath().isEmpty()){
                     Toast.makeText(MainActivity.this,"Path has been set as "+checker.getName(),Toast.LENGTH_LONG).show();
                     return;
                 }
-                if(checker.getName()==""){
+                if(checker.getName().isEmpty()){
                     Toast.makeText(MainActivity.this,"Name has been occupied by "+checker.getPath(),Toast.LENGTH_LONG).show();
                     return;
                 }}catch(Exception e){showError(e.toString());}
@@ -720,11 +721,12 @@ public class MainActivity extends AppCompatActivity {
 
 			}
 			else{
-				directory = new File(BASE_DIR);
+				directory = new File(BASE_DIR);//Download/Youkuri/
 			}
             //File directory = new File(getExternalFilesDir(null), "AutoDownloadTest");
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
+                    showLogText("应该不能出这个问题……",ERROR);
                     return null;
                 }
             }
@@ -774,42 +776,6 @@ public class MainActivity extends AppCompatActivity {
                     return null;
                 }
             }
-            /*
-            //************If permission got***********
-            BufferedInputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
-            try {
-                File outputFile = new File(directory, fileName);
-				FileOutputStream out = new FileOutputStream(outputFile);
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, length);
-                }
-                return outputFile.getAbsolutePath();
-
-            } //************if permission lost**************
-            catch (IOException e) {
-                //BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
-				    //BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
-                try{
-               BufferedInputStream inN = new BufferedInputStream(new URL(fileUrl).openStream());
-                    File optFile = new File("/convertedAudio/", fileName);
-				    FileOutputStream outN = new FileOutputStream(optFile);
-                    byte[] buffer = new byte[1024];
-                    int length;
-                    while ((length = inN.read(buffer)) > 0) {
-                        outN.write(buffer, 0, length);
-                    }
-                    showLogText("Audio file saved to dir "+getPackageName()+" due to failed to get permission to access interal storage",WARNING);
-                exception = e;
-                    return outputFile.getAbsolutePath();
-                    }
-                catch(Exception e2){
-                    exception = e2;
-                    return null;
-                }
-            
-            }*/
 		}
 
 		//}
@@ -818,16 +784,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String filePath) {
             if (exception != null) {
-                if(exception.toString().indexOf("Operation not permitted")!=-1){
+                if(exception.toString().contains("Operation not permitted")){
                     if(isPermitted){
                         showLogText("请勿输入* / ? :等特殊符号",ERROR);
                     }
                     else{
-                        checkStoragePermission();
+                        showLogText("请授权访问存储空间",ERROR);
+                        checkAndRequestManageStoragePermission(MainActivity.this);
                     }
                 }
-                else if(exception.toString().indexOf("https://")!=-1){
-                    showLogText("下载失败: 字数过多，请注意断句，字数请勿超过50字",ERROR);
+                else if(exception.toString().contains("https://")){
+                    showLogText("下载失败: 字数过多，请注意断句，每段字数请勿超过50字",ERROR);
                 }
                 
             } else if (filePath != null) {
@@ -852,127 +819,121 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    
-    private String performHttpRequest(String encodedText) throws IOException {
-        HttpURLConnection connection = null;
-        BufferedReader reader = null;
-
-        try {//                https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php
-            URL url = new URL("https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php");
-            String postData = "contents=" + encodedText + "&firstinput=OK&option=1&optionext=zenkaku";
-
-            connection = (HttpURLConnection) url.openConnection();
-            setupConnection(connection, postData);
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw new IOException("HTTP错误代码: " + responseCode);
+    private void checkAndRequestManageStoragePermission(AppCompatActivity activity) {
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.R){//api >=30
+            if(Environment.isExternalStorageManager()){
+                isPermitted = true;
+            } else{
+                requestManageStoragePermission(activity);
             }
-
-            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            return readResponse(reader);
-        } finally {
-            if (reader != null) reader.close();
-            if (connection != null) connection.disconnect();
-        }
-    }
-    
-
-    
-    private void setupConnection(HttpURLConnection connection, String postData) throws IOException {
-        connection.setRequestMethod("POST");
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Java)");
-    //connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 11; V2156A Build/RP1A.200720.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36");
-        connection.setRequestProperty("Accept", "text/html");
-        
-        //very IMPORT!!!!!!
-        connection.setRequestProperty("X-Requested-With","mark.via");
-        
-        
-        
-        
-        connection.setRequestProperty("Referer","https://www.ltool.net/chinese-simplified-and-traditional-characters-pinyin-to-katakana-converter-in-english.php");
-        
-        connection.setInstanceFollowRedirects(true);
-        try (OutputStream os = connection.getOutputStream()) {
-            os.write(postData.getBytes(StandardCharsets.UTF_8));
-            os.flush();
-        }
-    }
-    
-    private String readResponse(BufferedReader reader) throws IOException {
-        StringBuilder response = new StringBuilder();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            response.append(line);
-        }
-        
-        String psdStr = response.substring(response.toString().length()-8586);
-        //showLogText(psdStr,LOG);
-        return psdStr;
-    }
-
-    private String processResponse(String response) {
-        if (response == null || response.isEmpty()) {
-            throw new RuntimeException("服务器返回空响应");
-        }
-        //？！：×÷
-
-        //read response
-        
-        String content = response.substring(response.indexOf("&lt;begin&gt;")+13, response.indexOf("&lt;end&gt;"));
-        //remove spaces
-        
-        content = content.replaceAll("\\s+", "")
-			.replaceAll("<spanstyle=color:#aaaaaa>.*?</span>", "");
-        return content;
-    }
-    private void checkStoragePermission() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        // 检查是否已有权限
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-            == PackageManager.PERMISSION_GRANTED) {
-            // 已经有权限
-                
-                isPermitted=true;
-                
+        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {//api >= 23
+            // 检查是否已有权限
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                // 已经有权限
+                isPermitted = true;
                 //showLogText("PG",LOG);
-                
-            return;
-        }
-        
-        // 检查是否需要显示权限请求说明
-        if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            // 向用户解释为什么需要权限
-            new AlertDialog.Builder(this)
-                .setTitle("需要存储权限")
-                .setMessage("应用需要存储权限来保存语音文件到您的设备")
-                .setPositiveButton("确定", (dialog, which) -> {
-                    // 用户理解后请求权限
+            }else {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // 向用户解释为什么需要权限
+                    new AlertDialog.Builder(this)
+                            .setTitle("需要存储权限")
+                            .setMessage("应用需要存储权限来保存语音文件到您的设备")
+                            .setPositiveButton("确定", (dialog, which) -> {
+                                // 用户理解后请求权限
+                                requestPermissions(
+                                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        STORAGE_PERMISSION_CODE
+                                );
+                            })
+                            .setNegativeButton("(请勿)取消", (dialog,which)->{requestPermissions(
+                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    STORAGE_PERMISSION_CODE
+                            );})
+                            .create()
+                            .show();
+                } else {
+                    // 直接请求权限
                     requestPermissions(
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        STORAGE_PERMISSION_CODE
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            STORAGE_PERMISSION_CODE
                     );
+                }
+                isPermitted = true;
+            }
+        }else {//api <23 no need
+            isPermitted = true;
+        }
+    }
+
+    private boolean abc=false;
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    private void requestManageStoragePermission(AppCompatActivity activity){
+        new AlertDialog.Builder(this)
+                .setTitle("即将申请管理储存权限")
+                .setMessage("为了正确保存下载文件，请授予软件管理设备全部文件的权限")
+                .setPositiveButton("去设置", (dialog, which) -> {
+
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    //intent.setData(Uri.parse("package:"+activity.getPackageName()));
+                    activity.startActivity(intent);
+
+                    isPermitted=true;
                 })
-                .setNegativeButton("Donot取消!!!", (dialog,which)->{requestPermissions(
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                STORAGE_PERMISSION_CODE
-            );})
+                .setNegativeButton("取消", (dialog, which)->{
+                    Toast.makeText(this, "权限申请被拒绝，将可能无法正常访问文件", Toast.LENGTH_SHORT).show();
+                    //abc=false;
+                })
                 .create()
                 .show();
-        } else {
-            // 直接请求权限
-            requestPermissions(
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                STORAGE_PERMISSION_CODE
-            );
-        }
     }
-    // Android 6.0 以下版本默认有权限
-}
+//    private void checkStoragePermission(){
+//
+//    }
+
+//    private void checkStoragePermission() {
+//
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // 检查是否已有权限
+//            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+//                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//            // 已经有权限
+//                isPermitted=true;
+//                //showLogText("PG",LOG);
+//
+//            return;
+//        }
+//        //没有权限
+//        // 检查是否需要显示权限请求说明
+//        if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+//            // 向用户解释为什么需要权限
+//            new AlertDialog.Builder(this)
+//                .setTitle("需要存储权限")
+//                .setMessage("应用需要存储权限来保存语音文件到您的设备")
+//                .setPositiveButton("确定", (dialog, which) -> {
+//                    // 用户理解后请求权限
+//                    requestPermissions(
+//                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                        STORAGE_PERMISSION_CODE
+//                    );
+//                })
+//                .setNegativeButton("(请勿)取消", (dialog,which)->{requestPermissions(
+//                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                STORAGE_PERMISSION_CODE
+//            );})
+//                .create()
+//                .show();
+//        } else {
+//            // 直接请求权限
+//            requestPermissions(
+//                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                STORAGE_PERMISSION_CODE
+//            );
+//        }
+//    }
+//     //Android 6.0 以下版本默认有权限
+//}
 /*
     private void checkStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -1002,36 +963,98 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }*/
-    @Override
-public void onRequestPermissionsResult(int requestCode, 
-                                     @NonNull String[] permissions, 
-                                     @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//    @Override
+//public void onRequestPermissionsResult(int requestCode,
+//                                     @NonNull String[] permissions,
+//                                     @NonNull int[] grantResults) {
+//    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//
+//    if (requestCode == STORAGE_PERMISSION_CODE) {
+//        if (grantResults.length > 0 &&
+//            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//            // 权限已授予
+//                isPermitted=true;
+//
+//                //showLogText("wtf?",LOG);
+//
+//            Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
+//        } else {
+//            // 权限被拒绝
+//                isPermitted=false;
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+//                    // 用户勾选了"不再询问"，引导用户去设置中开启权限
+//                    showPermissionDeniedDialog();
+//                } else {
+//                    // 只是简单拒绝，可以再次请求
+//                    Toast.makeText(this, "需要存储权限才能保存文件", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        }
+//    }
+//}
 
-    if (requestCode == STORAGE_PERMISSION_CODE) {
-        if (grantResults.length > 0 && 
-            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // 权限已授予
-                isPermitted=true;
-                
-                //showLogText("wtf?",LOG);
-                
-            Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
+
+    // 【新增】实际测试 Download 目录是否能读写
+    private void testDownloadAccess() {
+        File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (downloadDir.exists() && downloadDir.canRead()) {
+            isPermitted = true;
+            Toast.makeText(this, "可以访问 Download 目录", Toast.LENGTH_SHORT).show();
         } else {
-            // 权限被拒绝
-                isPermitted=false;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    // 用户勾选了"不再询问"，引导用户去设置中开启权限
-                    showPermissionDeniedDialog();
-                } else {
-                    // 只是简单拒绝，可以再次请求
-                    Toast.makeText(this, "需要存储权限才能保存文件", Toast.LENGTH_SHORT).show();
-                }
+            // 在 Android 10 上，即使权限通过，这里也可能返回 false
+            // 此时需要降级使用 MediaStore 或 SAF
+            isPermitted = false;
+            Toast.makeText(this, "传统方式无法访问，尝试使用系统选择器", Toast.LENGTH_SHORT).show();
+
+            // 如果当前是 Android 10，建议调用 SAF 作为备选
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                openDownloadViaSAF();
             }
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void openDownloadViaSAF() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        // 尝试直接定位到 Downloads（仅部分系统支持）
+        Uri downloadsUri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload");
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, downloadsUri);
+        startActivityForResult(intent, REQUEST_CODE_SAF);
+    }
+@Override
+public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                       @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == STORAGE_PERMISSION_CODE) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // 权限授予后，必须实际测试
+            testDownloadAccess();
+        } else {
+            // 用户拒绝权限，检查是否勾选了“不再询问”
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    // 用户勾选了“不再询问”，引导去设置页
+                    new AlertDialog.Builder(this)
+                            .setTitle("权限被禁用")
+                            .setMessage("您已拒绝存储权限且选择不再询问，请前往设置手动开启。")
+                            .setPositiveButton("去设置", (dialog, which) -> {
+                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                intent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(intent);
+                            })
+                            .setNegativeButton("取消", null)
+                            .create()
+                            .show();
+                } else {
+                    Toast.makeText(this, "权限被拒绝，无法访问文件", Toast.LENGTH_SHORT).show();
+                }
+            }
+            isPermitted = false;
+        }
+    }
 }
+
+
 
 private void showPermissionDeniedDialog() {
         isPermitted=false;
@@ -1048,7 +1071,7 @@ private void showPermissionDeniedDialog() {
         .setNegativeButton("取消", null)
         .create()
         .show();
-        
+
 }
     
 

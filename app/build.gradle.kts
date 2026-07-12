@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.chinesetoy"
         minSdk = 21
         targetSdk = 33
-        versionCode = 4
-        versionName = "3.0.0"
+        versionCode = 5
+        versionName = "3.1.0"
         
         vectorDrawables { 
             useSupportLibrary = true
